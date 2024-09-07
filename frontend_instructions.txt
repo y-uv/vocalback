@@ -1,0 +1,27 @@
+To the frontend engineer:
+
+The issue with the frontend application not being able to fetch the processed audio files has been resolved on the backend side. The Flask app 'app.py' in the '/vocalback' directory has been updated with the following changes:
+
+1. Added a new route '/outputs/<path:path>' to serve static files from the 'outputs' directory where the processed audio files are stored.
+
+2. Updated the CORS configuration to allow cross-origin requests from 'http://localhost:3000' (the frontend URL) to the '/outputs' route.
+
+3. Modified the '/split' route to return the paths to the processed audio files using the backend server's URL (http://127.0.0.1:5000) and the '/outputs' route.
+
+With these changes, the backend is now correctly serving the processed audio files, and the paths returned by the '/split' endpoint are constructed using the appropriate backend URL.
+
+On the frontend side, you will need to ensure that the fetching of the audio files is done using the paths returned by the backend, which should now be in the format 'http://127.0.0.1:5000/outputs/[output_dir]/[file_name]'.
+
+For example, if the backend returns the following response:
+
+{
+  "vocals": "http://127.0.0.1:5000/outputs/shortclip/shortclip_vocals.wav",
+  "accompaniment": "http://127.0.0.1:5000/outputs/shortclip/shortclip_instrumental.wav"
+}
+
+The frontend should use these exact URLs to fetch the respective audio files.
+
+Please let me know if you have any further questions or if you encounter any issues after making the necessary changes on the frontend side.
+
+Regards,
+Claude Dev

@@ -1,0 +1,51 @@
+# Ignore virtual environment
+.venv/
+env/
+venv/
+
+# Python bytecode
+__pycache__/
+*.py[cod]
+
+# Environment variables
+.env
+*.env
+
+# Log files
+*.log
+
+# Model files (add specific models you're using)
+*.ckpt
+.ckpt
+uploads/
+outputs/
+
+# Cache and distribution files
+*.egg-info/
+dist/
+build/
+*.egg
+*.pkl
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints
+
+# IDE files (e.g., VSCode, PyCharm)
+.vscode/
+.idea/
+
+# Ignore system-specific files
+.DS_Store
+Thumbs.db
+
+# Ignore compiled C extensions
+*.so
+
+# PyTest cache
+.pytest_cache/
+
+# Ignore pipfile and pipenv
+Pipfile.lock
+
+# Ignore compiled wheel files
+*.whl
