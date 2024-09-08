@@ -4,6 +4,7 @@ import os
 import sys
 import subprocess
 from werkzeug.utils import secure_filename
+import shutil
 import yaml
 from yaml import Loader
 import logging
@@ -53,6 +54,16 @@ def split_audio():
         return jsonify({'error': 'No selected file'}), 400
     if file and allowed_file(file.filename):
         filename = secure_filename(file.filename)
+        
+        # Clear the uploads folder
+        uploads_path = os.path.join(app.root_path, app.config['UPLOAD_FOLDER'])
+        for file_path in os.listdir(uploads_path):
+            file_path = os.path.join(uploads_path, file_path)
+            if os.path.isfile(file_path):
+                os.unlink(file_path)
+        
+        logger.info(f"Cleared uploads folder: {uploads_path}")
+        
         file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
         file.save(file_path)
         
@@ -99,10 +110,16 @@ def split_audio():
             logger.info(f"Model path: {model_path}")
             logger.info(f"Executing command: {' '.join(cmd)}")
             
-            # Use subprocess.run instead of os.system
-            result = subprocess.run(cmd, capture_output=True, text=True)
+            # Run command and capture output
+            proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
+            stdout, stderr = proc.communicate()
             
-            if result.returncode == 0:
+            # Print captured output
+            print(stdout)
+            if stderr:
+                print(stderr, file=sys.stderr)
+            
+            if proc.returncode == 0:
                 vocals_filename = f"{os.path.splitext(filename)[0]}_{config['training']['target_instrument']}.wav"
                 instrumental_filename = f"{os.path.splitext(filename)[0]}_instrumental.wav"
                 
@@ -123,9 +140,7 @@ def split_audio():
                     }
                 ), 200
             else:
-                logger.error(f"Error processing file. Exit code: {result.returncode}")
-                logger.error(f"STDOUT: {result.stdout}")
-                logger.error(f"STDERR: {result.stderr}")
+                logger.error(f"Error processing file. Exit code: {proc.returncode}")
                 return jsonify({'error': f'An error occurred while processing the file'}), 500
         except Exception as e:
             logger.error(f"Error processing file: {e}")

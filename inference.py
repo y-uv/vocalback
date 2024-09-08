@@ -17,6 +17,8 @@ warnings.filterwarnings("ignore")
 
 
 def run_folder(model, args, config, device, verbose=False):
+    print(f"Running inference on: {device}")
+
     start_time = time.time()
     model.eval()
     all_mixtures_path = glob.glob(args.input_folder + '/*.wav')
@@ -45,7 +47,7 @@ def run_folder(model, args, config, device, verbose=False):
             total_length = mixture.shape[1]
             num_chunks = (total_length + config.inference.chunk_size // config.inference.num_overlap - 1) // (config.inference.chunk_size // config.inference.num_overlap)
             estimated_total_time = first_chunk_time * num_chunks
-            print(f"Estimated total processing time for this track: {estimated_total_time:.2f} seconds")
+            print(f"Estimated total processing time for this track (Track {track_number}/{total_tracks}): {estimated_total_time:.2f} seconds")
             sys.stdout.write(f"Estimated time remaining: {estimated_total_time:.2f} seconds\r")
             sys.stdout.flush()
 
@@ -61,7 +63,7 @@ def run_folder(model, args, config, device, verbose=False):
         sf.write(instrumental_path, instrumental, sr, subtype='FLOAT')
 
     time.sleep(1)
-    print("Elapsed time: {:.2f} sec".format(time.time() - start_time))
+    print(f"Elapsed time: {time.time() - start_time:.2f} sec")
 
 
 def proc_folder(args):
@@ -83,15 +85,18 @@ def proc_folder(args):
       config = ConfigDict(yaml.load(f, Loader=yaml.FullLoader))
 
     model = get_model_from_config(args.model_type, config)
-    if args.model_path != '':
-        print('Using model: {}'.format(args.model_path))
+    model_path = args.model_path
+    if model_path:
+        print(f'Using model: {model_path}')
         model.load_state_dict(
-            torch.load(args.model_path, map_location=torch.device('cpu'))
+            torch.load(model_path, map_location=torch.device('cpu'))
         )
+    else:
+        print("No model path provided, using default model")
 
     if torch.cuda.is_available():
         device_ids = args.device_ids
-        if type(device_ids)==int:
+        if isinstance(device_ids, int):
             device = torch.device(f'cuda:{device_ids}')
             model = model.to(device)
         else:
@@ -99,8 +104,8 @@ def proc_folder(args):
             model = nn.DataParallel(model, device_ids=device_ids).to(device)
     else:
         device = 'cpu'
-        print('CUDA is not available. Run inference on CPU. It will be very slow...')
         model = model.to(device)
+        print("CUDA is not available, running inference on CPU. This may be slow.")
 
     run_folder(model, args, config, device, verbose=False)
 
